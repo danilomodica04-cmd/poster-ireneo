@@ -109,7 +109,7 @@ function poster(i) {
   const tela = document.createElement("canvas"); tela.width = W; tela.height = H;
   const o = { p, i, W, H, tela, tx: tela.getContext("2d"), pronto: null, foto: null, lastra: null, analisi: null, texture: null };
   o.pronto = (async () => {
-    const [foto, plate, tit] = await Promise.all([load(`assets/poster/${p.id}_foto.jpg`), load(`assets/poster/${p.id}_lastra.png`),
+    const [foto, plate, tit] = await Promise.all([load(`assets/poster/${p.id}_foto.jpg`).catch(() => load(`${p.id}_foto.jpg`)), load(`assets/poster/${p.id}_lastra.png`),
       p.titolo_img ? load(`assets/poster/${p.id}_titolo.png`) : Promise.resolve(null)]);
     o.foto = foto; o.titolo = tit;
     // lastra arancione su bianco, come in stampa
