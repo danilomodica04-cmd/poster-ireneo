@@ -145,8 +145,8 @@ function disegna(o, now, vivo) {
   const dt = Math.min(0.1, (now - tPrima) / 1000); tPrima = now;
   const s = (now - t0) / 1000;
   // la foto respira: deriva lentissima e piccola variazione di scala
-  const k = 1.03 + 0.01 * Math.sin(s * 2 * Math.PI / 14);
-  const dx = W * 0.007 * Math.sin(s * 2 * Math.PI / 19), dy = H * 0.005 * Math.cos(s * 2 * Math.PI / 23);
+  const k = 1 + 0.004 * Math.sin(s * 2 * Math.PI / 14);
+  const dx = W * 0.0015 * Math.sin(s * 2 * Math.PI / 19), dy = H * 0.0012 * Math.cos(s * 2 * Math.PI / 23);
   tx.globalCompositeOperation = "source-over"; tx.fillStyle = "#fff"; tx.fillRect(0, 0, W, H);
   tx.save(); tx.translate(W / 2 + dx, H / 2 + dy); tx.scale(k, k); tx.drawImage(o.foto, -W / 2, -H / 2, W, H); tx.restore();
   // il segno: la lastra stampata quando la voce tace, il simbolo di Caleido quando parla
@@ -154,21 +154,34 @@ function disegna(o, now, vivo) {
   mix += ((parla ? 1 : 0) - mix) * Math.min(1, dt / 0.6);
   if (strato.width !== W || strato.height !== H) { strato.width = W; strato.height = H; }
   lx.globalCompositeOperation = "source-over"; lx.globalAlpha = 1; lx.fillStyle = "#fff"; lx.fillRect(0, 0, W, H);
-  if (mix < 0.999) { lx.globalAlpha = 1 - mix; lx.drawImage(o.lastra, 0, 0); lx.globalAlpha = 1; }
-  if (mix > 0.001 && o.analisi && vivo) {
-    const D = Math.round(Math.max(0.5, p.r * 2.7) * W);
-    if (segno.width !== D) { segno.width = segno.height = D; }
-    Caleido.setFeatures(o.analisi);
-    const sc = Caleido.build(D, D, audio.currentTime, dt, parla);
-    Caleido.draw(sx, sc, 1, 1);
-    sx.globalCompositeOperation = "multiply"; sx.fillStyle = INV; sx.fillRect(0, 0, D, D); sx.globalCompositeOperation = "source-over";
-    lx.globalAlpha = mix; lx.globalCompositeOperation = "difference";
-    lx.drawImage(segno, p.cx * W - D / 2, p.cy * H - D / 2);
-    lx.globalCompositeOperation = "source-over"; lx.globalAlpha = 1;
+  // il segno resta dov'e' stampato: stessa forma, stesso centro. Con la voce gli anelli ruotano di pochi gradi
+  // in versi alterni (come gli anelli di Caleido) e tutto il segno respira di poco attorno al proprio centro.
+  const cx = p.cx * W, cy = p.cy * H, R = p.r * W, N = 6;
+  const v = vivo && o.analisi ? voceOra(o.analisi, audio.currentTime) : null;
+  for (let k = 0; k <= N; k++) {
+    const a = v ? mix * v.anelli[k] : 0, ang = (k % 2 ? 1 : -1) * a * 4 * Math.PI / 180, sc = 1 + (v ? mix * 0.03 * v.env : 0);
+    lx.save(); lx.beginPath();
+    if (k < N) { lx.arc(cx, cy, R * (k + 1) / N, 0, 2 * Math.PI); if (k) lx.arc(cx, cy, R * k / N, 0, 2 * Math.PI, true); }
+    else { lx.rect(0, 0, W, H); lx.arc(cx, cy, R, 0, 2 * Math.PI, true); }
+    lx.clip("evenodd");
+    lx.translate(cx, cy); if (k < N) { lx.rotate(ang); lx.scale(sc, sc); } lx.translate(-cx, -cy);
+    lx.drawImage(o.lastra, 0, 0); lx.restore();
   }
   tx.globalCompositeOperation = "multiply"; tx.drawImage(strato, 0, 0); tx.globalCompositeOperation = "source-over";
-  if (o.titolo) titolo(o, s, vivo ? mix : 0);
+  if (o.titolo) tx.drawImage(o.titolo, 0, 0, W, H);
   if (vivo && o.analisi) $("barra").firstElementChild.style.width = (100 * audio.currentTime / (audio.duration || o.analisi.dur)) + "%";
+}
+
+// ---------------------------------------------------------------- la voce in questo istante (lisciata)
+const liscio = { env: 0, anelli: new Float32Array(7) };
+function voceOra(F, t) {
+  const i = Math.max(0, Math.min(F.n - 1, Math.floor(t / F.hop))), NB = Caleido.NB;
+  const e = Math.min(1, F.rms[i]); liscio.env += (e - liscio.env) * (e > liscio.env ? 0.35 : 0.08);
+  for (let k = 0; k < 7; k++) {
+    const b = Math.min(NB - 1, Math.round(1 + k * (NB - 3) / 6)), x = Math.min(1, F.bands[i * NB + b]);
+    liscio.anelli[k] += (x - liscio.anelli[k]) * (x > liscio.anelli[k] ? 0.3 : 0.07);
+  }
+  return liscio;
 }
 
 // ---------------------------------------------------------------- il titolo segue la voce

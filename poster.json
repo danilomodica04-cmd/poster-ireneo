@@ -4,9 +4,9 @@
   "titolo": "Sopra questo colle",
   "voce": "Mino",
   "aspetto": 1.3171,
-  "cx": 0.4946,
-  "cy": 0.3872,
-  "r": 0.3206,
+  "cx": 0.4998,
+  "cy": 0.4596,
+  "r": 0.5,
   "titolo_img": true
  },
  {
@@ -14,9 +14,9 @@
   "titolo": "In questa valigia",
   "voce": "Felice",
   "aspetto": 1.3153,
-  "cx": 0.476,
-  "cy": 0.5053,
-  "r": 0.4675,
+  "cx": 0.5062,
+  "cy": 0.5363,
+  "r": 0.5202,
   "titolo_img": true
  },
  {
@@ -24,9 +24,9 @@
   "titolo": "E sono partito",
   "voce": "Mino",
   "aspetto": 1.3171,
-  "cx": 0.5388,
-  "cy": 0.511,
-  "r": 0.2656,
+  "cx": 0.4992,
+  "cy": 0.5271,
+  "r": 0.3361,
   "titolo_img": true
  },
  {
@@ -34,9 +34,9 @@
   "titolo": "Su quel treno e su quella nave",
   "voce": "Felice",
   "aspetto": 1.3171,
-  "cx": 0.5943,
-  "cy": 0.4287,
-  "r": 0.2853,
+  "cx": 0.4992,
+  "cy": 0.526,
+  "r": 0.5135,
   "titolo_img": true
  },
  {
@@ -44,9 +44,9 @@
   "titolo": "Appena arrivati",
   "voce": "Felice",
   "aspetto": 1.3147,
-  "cx": 0.4121,
-  "cy": 0.5921,
-  "r": 0.5622,
+  "cx": 0.4987,
+  "cy": 0.5322,
+  "r": 0.6225,
   "titolo_img": true
  },
  {
@@ -54,9 +54,9 @@
   "titolo": "Arrivati a destinazione",
   "voce": "Felice",
   "aspetto": 1.3171,
-  "cx": 0.5158,
-  "cy": 0.3169,
-  "r": 0.366,
+  "cx": 0.4987,
+  "cy": 0.5271,
+  "r": 0.518,
   "titolo_img": true
  },
  {
@@ -64,9 +64,9 @@
   "titolo": "All'inizio ci trattavano male",
   "voce": "Felice",
   "aspetto": 1.3171,
-  "cx": 0.5361,
-  "cy": 0.4496,
-  "r": 0.3251,
+  "cx": 0.4987,
+  "cy": 0.5274,
+  "r": 0.5328,
   "titolo_img": false
  },
  {
@@ -74,9 +74,9 @@
   "titolo": "Nelle scuole",
   "voce": "Felice",
   "aspetto": 1.3171,
-  "cx": 0.4602,
-  "cy": 0.4588,
-  "r": 0.2011,
+  "cx": 0.4896,
+  "cy": 0.5238,
+  "r": 0.3392,
   "titolo_img": true
  },
  {
@@ -84,9 +84,9 @@
   "titolo": "Spesso nei miei sogni",
   "voce": "Felice",
   "aspetto": 1.3171,
-  "cx": 0.5141,
-  "cy": 0.5309,
-  "r": 0.2904,
+  "cx": 0.4982,
+  "cy": 0.5271,
+  "r": 0.3315,
   "titolo_img": true
  },
  {
@@ -94,9 +94,9 @@
   "titolo": "Nei miei sogni",
   "voce": "Felice",
   "aspetto": 1.3171,
-  "cx": 0.4825,
-  "cy": 0.5497,
-  "r": 0.2896,
+  "cx": 0.4986,
+  "cy": 0.5283,
+  "r": 0.3342,
   "titolo_img": true
  },
  {
@@ -104,9 +104,9 @@
   "titolo": "E te povera mamma",
   "voce": "Felice",
   "aspetto": 1.3171,
-  "cx": 0.5025,
-  "cy": 0.5558,
-  "r": 0.2929,
+  "cx": 0.4974,
+  "cy": 0.5284,
+  "r": 0.3193,
   "titolo_img": true
  },
  {
@@ -114,9 +114,9 @@
   "titolo": "Mi piace assai",
   "voce": "Elio",
   "aspetto": 1.3171,
-  "cx": 0.589,
-  "cy": 0.4978,
-  "r": 0.1298,
+  "cx": 0.4992,
+  "cy": 0.5256,
+  "r": 0.3286,
   "titolo_img": true
  },
  {
@@ -124,9 +124,9 @@
   "titolo": "Il 20 giugno",
   "voce": "Maria Luisa",
   "aspetto": 1.3171,
-  "cx": 0.7473,
-  "cy": 0.3963,
-  "r": 0.2491,
+  "cx": 0.5205,
+  "cy": 0.5041,
+  "r": 0.4798,
   "titolo_img": true
  },
  {
@@ -134,9 +134,9 @@
   "titolo": "Il vecchio minatore",
   "voce": null,
   "aspetto": 1.3171,
-  "cx": 0.5256,
-  "cy": 0.7092,
-  "r": 0.2469,
+  "cx": 0.4979,
+  "cy": 0.5273,
+  "r": 0.3506,
   "titolo_img": true
  },
  {
@@ -144,9 +144,9 @@
   "titolo": "Addio mare lucente",
   "voce": null,
   "aspetto": 1.3171,
-  "cx": 0.5072,
-  "cy": 0.5018,
-  "r": 0.3007,
+  "cx": 0.4989,
+  "cy": 0.5277,
+  "r": 0.3301,
   "titolo_img": true
  },
  {
@@ -154,9 +154,9 @@
   "titolo": "Nostalgia guglionesana",
   "voce": null,
   "aspetto": 1.3171,
-  "cx": 0.3756,
-  "cy": 0.516,
-  "r": 0.4919,
+  "cx": 0.4989,
+  "cy": 0.5274,
+  "r": 0.5226,
   "titolo_img": true
  },
  {
@@ -164,9 +164,9 @@
   "titolo": "Ricordi",
   "voce": null,
   "aspetto": 1.3147,
-  "cx": 0.5271,
-  "cy": 0.6045,
-  "r": 0.5011,
+  "cx": 0.5053,
+  "cy": 0.5513,
+  "r": 0.5789,
   "titolo_img": true
  },
  {
@@ -174,9 +174,9 @@
   "titolo": "Guglionesi paese mio",
   "voce": null,
   "aspetto": 1.2771,
-  "cx": 0.5327,
-  "cy": 0.4201,
-  "r": 0.4412,
+  "cx": 0.5016,
+  "cy": 0.5199,
+  "r": 0.516,
   "titolo_img": true
  },
  {
@@ -184,9 +184,9 @@
   "titolo": "Molis mi",
   "voce": null,
   "aspetto": 1.3153,
-  "cx": 0.5197,
-  "cy": 0.729,
-  "r": 0.2531,
+  "cx": 0.5061,
+  "cy": 0.5359,
+  "r": 0.5341,
   "titolo_img": true
  }
 ]
