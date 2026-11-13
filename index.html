@@ -99,6 +99,7 @@ const INV = `rgb(${255 - ARANCIO[0]},${255 - ARANCIO[1]},${255 - ARANCIO[2]})`;
 const W = 900;                                      // larghezza della tela di ogni poster
 
 const POSTER = await (await fetch("poster.json")).json();
+Caleido.S.motion = 0.2; Caleido.S.deform = 0.45;
 const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
 
 // ---------------------------------------------------------------- un poster: foto, lastra, voce, tela
@@ -153,19 +154,23 @@ function disegna(o, now, vivo) {
   mix += ((parla ? 1 : 0) - mix) * Math.min(1, dt / 0.6);
   if (strato.width !== W || strato.height !== H) { strato.width = W; strato.height = H; }
   lx.globalCompositeOperation = "source-over"; lx.globalAlpha = 1; lx.fillStyle = "#fff"; lx.fillRect(0, 0, W, H);
-  // il segno parte e torna sempre dov'e' stampato. Con la voce pulsa e ruota appena attorno al proprio centro,
-  // e a ogni sillaba forte lascia un'eco che si allarga e svanisce, come un'onda sonora.
-  const cx = p.cx * W, cy = p.cy * H;
-  const v = vivo && o.analisi ? voceOra(o.analisi, audio.currentTime) : null;
-  const ora = audio.currentTime;
-  if (v && parla && v.colpo && ora - (o.ultimaEco || -1) > 0.22) { (o.echi = o.echi || []).push({ t: ora, f: Math.min(1, 0.4 + v.env) }); o.ultimaEco = ora; }
-  const segnoA = (sc, ang, alpha) => { lx.save(); lx.globalAlpha = alpha; lx.translate(cx, cy); lx.rotate(ang); lx.scale(sc, sc); lx.translate(-cx, -cy); lx.drawImage(o.lastra, 0, 0); lx.restore(); };
-  if (o.echi) {
-    o.echi = o.echi.filter(e => ora - e.t < 1.4 && ora >= e.t);
-    for (const e of o.echi) { const a = (ora - e.t) / 1.4; segnoA(1 + 0.32 * a, 0, mix * e.f * 0.7 * (1 - a) * (1 - a)); }
+  // Il segno di Caleido nasce esattamente dove sta quello stampato: stesso centro, e non esce mai dal cerchio
+  // che lo contiene sulla carta. Fuori da quel cerchio la lastra stampata resta com'e'.
+  const cx = p.cx * W, cy = p.cy * H, RR = p.r * W;
+  lx.save(); lx.beginPath(); lx.rect(0, 0, W, H); lx.arc(cx, cy, RR, 0, 2 * Math.PI, true); lx.clip("evenodd"); lx.drawImage(o.lastra, 0, 0); lx.restore();
+  lx.save(); lx.beginPath(); lx.arc(cx, cy, RR, 0, 2 * Math.PI); lx.clip();
+  if (mix < 0.999) { lx.globalAlpha = 1 - mix; lx.drawImage(o.lastra, 0, 0); lx.globalAlpha = 1; }
+  if (mix > 0.001 && o.analisi && vivo) {
+    const D = Math.round(RR / 0.97 / 0.45);
+    if (segno.width !== D) { segno.width = segno.height = D; }
+    Caleido.setFeatures(o.analisi);
+    const scn = Caleido.build(D, D, audio.currentTime, dt, parla);
+    sx.globalCompositeOperation = "source-over"; sx.clearRect(0, 0, D, D);
+    Caleido.draw(sx, scn, 1, 0);
+    sx.globalCompositeOperation = "source-in"; sx.fillStyle = "rgb(255,54,10)"; sx.fillRect(0, 0, D, D); sx.globalCompositeOperation = "source-over";
+    lx.globalAlpha = mix; lx.drawImage(segno, cx - D / 2, cy - D / 2); lx.globalAlpha = 1;
   }
-  const sc = 1 + (v ? mix * 0.1 * v.env : 0), ang = v ? mix * 0.09 * (v.anelli[1] - v.anelli[5]) : 0;
-  segnoA(sc, ang, 1);
+  lx.restore();
   tx.globalCompositeOperation = "multiply"; tx.drawImage(strato, 0, 0); tx.globalCompositeOperation = "source-over";
   if (o.titolo) tx.drawImage(o.titolo, 0, 0, W, H);
   if (vivo && o.analisi) $("barra").firstElementChild.style.width = (100 * audio.currentTime / (audio.duration || o.analisi.dur)) + "%";
