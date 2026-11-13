@@ -112,12 +112,11 @@ function poster(i) {
     const [foto, plate, tit] = await Promise.all([load(`assets/poster/${p.id}_foto.jpg`).catch(() => load(`${p.id}_foto.jpg`)), load(`assets/poster/${p.id}_lastra.png`),
       p.titolo_img ? load(`assets/poster/${p.id}_titolo.png`) : Promise.resolve(null)]);
     o.foto = foto; o.titolo = tit;
-    // lastra arancione su bianco, come in stampa
-    const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
-    x.fillStyle = "#fff"; x.fillRect(0, 0, W, H);
-    const m = document.createElement("canvas"); m.width = W; m.height = H; const mx = m.getContext("2d");
-    mx.drawImage(plate, 0, 0, W, H); mx.globalCompositeOperation = "multiply"; mx.fillStyle = INV; mx.fillRect(0, 0, W, H);
-    x.globalCompositeOperation = "difference"; x.drawImage(m, 0, 0);
+    // lastra arancione su trasparente: la luminosita' della lastra diventa l'opacita' dell'arancione
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d", { willReadFrequently: true });
+    x.drawImage(plate, 0, 0, W, H); const d = x.getImageData(0, 0, W, H), px = d.data;
+    for (let j = 0; j < px.length; j += 4) { const a = px[j]; px[j] = ARANCIO[0]; px[j + 1] = ARANCIO[1]; px[j + 2] = ARANCIO[2]; px[j + 3] = a; }
+    x.putImageData(d, 0, 0);
     o.lastra = c;
     disegna(o, performance.now(), false);
   })();
@@ -154,19 +153,19 @@ function disegna(o, now, vivo) {
   mix += ((parla ? 1 : 0) - mix) * Math.min(1, dt / 0.6);
   if (strato.width !== W || strato.height !== H) { strato.width = W; strato.height = H; }
   lx.globalCompositeOperation = "source-over"; lx.globalAlpha = 1; lx.fillStyle = "#fff"; lx.fillRect(0, 0, W, H);
-  // il segno resta dov'e' stampato: stessa forma, stesso centro. Con la voce gli anelli ruotano di pochi gradi
-  // in versi alterni (come gli anelli di Caleido) e tutto il segno respira di poco attorno al proprio centro.
-  const cx = p.cx * W, cy = p.cy * H, R = p.r * W, N = 6;
+  // il segno parte e torna sempre dov'e' stampato. Con la voce pulsa e ruota appena attorno al proprio centro,
+  // e a ogni sillaba forte lascia un'eco che si allarga e svanisce, come un'onda sonora.
+  const cx = p.cx * W, cy = p.cy * H;
   const v = vivo && o.analisi ? voceOra(o.analisi, audio.currentTime) : null;
-  for (let k = 0; k <= N; k++) {
-    const a = v ? mix * v.anelli[k] : 0, ang = (k % 2 ? 1 : -1) * a * 4 * Math.PI / 180, sc = 1 + (v ? mix * 0.03 * v.env : 0);
-    lx.save(); lx.beginPath();
-    if (k < N) { lx.arc(cx, cy, R * (k + 1) / N, 0, 2 * Math.PI); if (k) lx.arc(cx, cy, R * k / N, 0, 2 * Math.PI, true); }
-    else { lx.rect(0, 0, W, H); lx.arc(cx, cy, R, 0, 2 * Math.PI, true); }
-    lx.clip("evenodd");
-    lx.translate(cx, cy); if (k < N) { lx.rotate(ang); lx.scale(sc, sc); } lx.translate(-cx, -cy);
-    lx.drawImage(o.lastra, 0, 0); lx.restore();
+  const ora = audio.currentTime;
+  if (v && parla && v.colpo && ora - (o.ultimaEco || -1) > 0.22) { (o.echi = o.echi || []).push({ t: ora, f: Math.min(1, 0.4 + v.env) }); o.ultimaEco = ora; }
+  const segnoA = (sc, ang, alpha) => { lx.save(); lx.globalAlpha = alpha; lx.translate(cx, cy); lx.rotate(ang); lx.scale(sc, sc); lx.translate(-cx, -cy); lx.drawImage(o.lastra, 0, 0); lx.restore(); };
+  if (o.echi) {
+    o.echi = o.echi.filter(e => ora - e.t < 1.4 && ora >= e.t);
+    for (const e of o.echi) { const a = (ora - e.t) / 1.4; segnoA(1 + 0.32 * a, 0, mix * e.f * 0.7 * (1 - a) * (1 - a)); }
   }
+  const sc = 1 + (v ? mix * 0.1 * v.env : 0), ang = v ? mix * 0.09 * (v.anelli[1] - v.anelli[5]) : 0;
+  segnoA(sc, ang, 1);
   tx.globalCompositeOperation = "multiply"; tx.drawImage(strato, 0, 0); tx.globalCompositeOperation = "source-over";
   if (o.titolo) tx.drawImage(o.titolo, 0, 0, W, H);
   if (vivo && o.analisi) $("barra").firstElementChild.style.width = (100 * audio.currentTime / (audio.duration || o.analisi.dur)) + "%";
@@ -177,6 +176,7 @@ const liscio = { env: 0, anelli: new Float32Array(7) };
 function voceOra(F, t) {
   const i = Math.max(0, Math.min(F.n - 1, Math.floor(t / F.hop))), NB = Caleido.NB;
   const e = Math.min(1, F.rms[i]); liscio.env += (e - liscio.env) * (e > liscio.env ? 0.35 : 0.08);
+  let c = 0; for (let j = Math.max(0, i - 2); j <= i; j++) c |= F.onset[j]; liscio.colpo = !!c;
   for (let k = 0; k < 7; k++) {
     const b = Math.min(NB - 1, Math.round(1 + k * (NB - 3) / 6)), x = Math.min(1, F.bands[i * NB + b]);
     liscio.anelli[k] += (x - liscio.anelli[k]) * (x > liscio.anelli[k] ? 0.3 : 0.07);
@@ -301,7 +301,7 @@ $("senza").addEventListener("click", () => {
   $("inizio").classList.add("nascosto"); $("elenco").classList.remove("nascosto");
 });
 audio.addEventListener("ended", () => { $("barra").firstElementChild.style.width = "100%"; });
-window.__TEST__ = { audio, poster, get attivo() { return attivo; } };
+window.__TEST__ = { audio, poster, apri: apriSolo, get attivo() { return attivo; } };
 </script>
 </body>
 </html>
