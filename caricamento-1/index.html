@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paese mio · poster</title>
+<style>
+  :root { --arancio: #ff360a; --nero: #0b0b0b; --bianco: #f4f1ec; --grigio: #8d8a85; }
+  html, body { margin: 0; height: 100%; background: var(--nero); color: var(--bianco);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; overflow: hidden; }
+  #ar { position: fixed; inset: 0; }
+  #ar video { object-fit: cover; }
+  .schermo { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: space-between;
+    padding: max(24px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+    box-sizing: border-box; z-index: 10; }
+  #inizio { background: var(--nero); }
+  .occhiello { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--arancio); margin: 0 0 10px; }
+  h1 { font-size: clamp(44px, 15vw, 80px); line-height: .88; margin: 0; font-weight: 700; letter-spacing: -.02em; text-transform: uppercase; }
+  .sotto { margin: 14px 0 0; font-size: 15px; color: var(--grigio); max-width: 32ch; line-height: 1.35; }
+  .istruzioni { font-size: 16px; line-height: 1.35; max-width: 30ch; margin: 0 0 18px; }
+  button { appearance: none; border: 0; border-radius: 999px; font: inherit; font-size: 17px; font-weight: 700; padding: 16px 26px; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--bianco); outline-offset: 3px; }
+  .primario { background: var(--arancio); color: #fff; width: 100%; }
+  .secondario { background: transparent; color: var(--bianco); text-decoration: underline; padding: 14px 0 0; font-weight: 400; font-size: 15px; }
+  #guida { pointer-events: none; justify-content: flex-end; align-items: center; text-align: center; }
+  #guida .cornice { position: absolute; left: 50%; top: 46%; width: min(64vw, 46vh); aspect-ratio: 3 / 4;
+    transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,.7); border-radius: 6px; }
+  .pillola { background: rgba(0,0,0,.6); padding: 10px 16px; border-radius: 999px; margin: 0; font-size: 15px; }
+  #cartellino { display: none !important; position: fixed; left: max(22px, env(safe-area-inset-left)); right: max(22px, env(safe-area-inset-right));
+    top: max(18px, env(safe-area-inset-top)); z-index: 11; display: none; }
+  #cartellino b { display: block; font-size: 20px; text-transform: uppercase; letter-spacing: -.01em; }
+  #cartellino span { font-size: 13px; color: var(--bianco); opacity: .8; }
+  #cartellino .fondo { display: inline-block; background: rgba(0,0,0,.6); padding: 10px 14px; border-radius: 10px; }
+  #barra { position: fixed; left: max(22px, env(safe-area-inset-left)); right: max(22px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom)); height: 3px; background: rgba(255,255,255,.25); z-index: 11; display: none; }
+  #barra i { display: block; height: 100%; width: 0; background: var(--arancio); }
+  #carico { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 12; pointer-events: none; }
+  #elenco { background: var(--nero); overflow-y: auto; justify-content: flex-start; gap: 18px; }
+  #elenco ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  #elenco li button { width: 100%; text-align: left; background: transparent; color: var(--bianco); border-radius: 0;
+    padding: 12px 0; border-bottom: 1px solid #2a2a2a; display: flex; gap: 14px; align-items: baseline; font-weight: 400; }
+  #elenco li button small { color: var(--arancio); font-variant-numeric: tabular-nums; min-width: 2.6em; }
+  #solo { position: fixed; inset: 0; background: var(--nero); display: none; align-items: center; justify-content: center; z-index: 9; }
+  #solo canvas { max-width: 100vw; max-height: 100vh; width: auto; height: auto; }
+  #chiudi { position: fixed; z-index: 13; right: max(16px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top));
+    background: rgba(0,0,0,.6); color: var(--bianco); padding: 10px 16px; font-size: 15px; display: none; }
+  .nascosto { display: none !important; }
+  #errore { color: var(--arancio); font-size: 15px; margin: 0 0 14px; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/three-addons/" } }
+</script>
+</head>
+<body>
+<div id="ar"></div>
+
+<section id="inizio" class="schermo nascosto">
+  <div>
+    <p class="occhiello">Ireneo Santangino · Paese mio</p>
+    <h1>Poesie<br>e musiche</h1>
+    <p class="sotto">Diciannove poster: tredici poesie lette dalle voci del paese e sei accompagnamenti musicali.</p>
+  </div>
+  <div>
+    <p id="errore" class="nascosto"></p>
+    <p class="istruzioni">Alza il volume e inquadra uno dei poster: il segno arancione si muove con la sua voce.</p>
+    <button id="avvia" class="primario">Apri la fotocamera</button>
+    <button id="senza" class="secondario">Ascolta senza poster</button>
+  </div>
+</section>
+
+<section id="guida" class="schermo">
+  <div class="cornice"></div>
+  
+</section>
+
+<section id="elenco" class="schermo nascosto">
+  <div>
+    <p class="occhiello">Senza poster</p>
+    <p class="istruzioni">Scegli una poesia o una musica.</p>
+  </div>
+  <ol id="lista"></ol>
+</section>
+
+<div id="cartellino"><div class="fondo"><b id="titolo"></b><span id="voce"></span></div></div>
+<button id="tocca" class="pillola nascosto" style="position:fixed;left:50%;bottom:max(40px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:14;color:#fff;font-weight:700">Tocca per ascoltare</button>
+<div id="carico"><p class="pillola">Carico la voce…</p></div>
+<div id="barra"><i></i></div>
+<div id="solo"></div>
+<button id="chiudi">Chiudi</button>
+
+<script src="js/caleido.js"></script>
+<script type="module">
+import * as THREE from "three";
+import { MindARThree } from "./lib/mindar-image-three.prod.js";
+
+const $ = id => document.getElementById(id);
+const ARANCIO = [255, 54, 10];
+const INV = `rgb(${255 - ARANCIO[0]},${255 - ARANCIO[1]},${255 - ARANCIO[2]})`;
+const W = 900;                                      // larghezza della tela di ogni poster
+
+const POSTER = await (await fetch("poster.json")).json();
+const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+
+// ---------------------------------------------------------------- un poster: foto, lastra, voce, tela
+const cache = new Map();
+function poster(i) {
+  if (cache.has(i)) return cache.get(i);
+  const p = POSTER[i], H = Math.round(W * p.aspetto);
+  const tela = document.createElement("canvas"); tela.width = W; tela.height = H;
+  const o = { p, i, W, H, tela, tx: tela.getContext("2d"), pronto: null, foto: null, lastra: null, analisi: null, texture: null };
+  o.pronto = (async () => {
+    const [foto, plate, tit] = await Promise.all([load(`assets/poster/${p.id}_foto.jpg`), load(`assets/poster/${p.id}_lastra.png`),
+      p.titolo_img ? load(`assets/poster/${p.id}_titolo.png`) : Promise.resolve(null)]);
+    o.foto = foto; o.titolo = tit;
+    // lastra arancione su bianco, come in stampa
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+    x.fillStyle = "#fff"; x.fillRect(0, 0, W, H);
+    const m = document.createElement("canvas"); m.width = W; m.height = H; const mx = m.getContext("2d");
+    mx.drawImage(plate, 0, 0, W, H); mx.globalCompositeOperation = "multiply"; mx.fillStyle = INV; mx.fillRect(0, 0, W, H);
+    x.globalCompositeOperation = "difference"; x.drawImage(m, 0, 0);
+    o.lastra = c;
+    disegna(o, performance.now(), false);
+  })();
+  cache.set(i, o); return o;
+}
+async function analizza(o) {
+  if (o.analisi) return o.analisi;
+  const ab = await (await fetch(`assets/voci/${o.p.id}.mp3`)).arrayBuffer();
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const buf = await new Promise((ok, ko) => ctx.decodeAudioData(ab, ok, ko));
+  o.analisi = await Caleido.analyse(buf); if (ctx.close) ctx.close();
+  return o.analisi;
+}
+
+// ---------------------------------------------------------------- disegno
+const audio = new Audio(); audio.preload = "auto";
+let attivo = null, mix = 0, tPrima = performance.now();
+const t0 = performance.now();
+const segno = document.createElement("canvas"); const sx = segno.getContext("2d");
+const strato = document.createElement("canvas"); const lx = strato.getContext("2d");
+
+function disegna(o, now, vivo) {
+  if (!o.foto) return;
+  const { W, H, tx, p } = o;
+  const dt = Math.min(0.1, (now - tPrima) / 1000); tPrima = now;
+  const s = (now - t0) / 1000;
+  // la foto respira: deriva lentissima e piccola variazione di scala
+  const k = 1.03 + 0.01 * Math.sin(s * 2 * Math.PI / 14);
+  const dx = W * 0.007 * Math.sin(s * 2 * Math.PI / 19), dy = H * 0.005 * Math.cos(s * 2 * Math.PI / 23);
+  tx.globalCompositeOperation = "source-over"; tx.fillStyle = "#fff"; tx.fillRect(0, 0, W, H);
+  tx.save(); tx.translate(W / 2 + dx, H / 2 + dy); tx.scale(k, k); tx.drawImage(o.foto, -W / 2, -H / 2, W, H); tx.restore();
+  // il segno: la lastra stampata quando la voce tace, il simbolo di Caleido quando parla
+  const parla = vivo && !audio.paused && !audio.ended;
+  mix += ((parla ? 1 : 0) - mix) * Math.min(1, dt / 0.6);
+  if (strato.width !== W || strato.height !== H) { strato.width = W; strato.height = H; }
+  lx.globalCompositeOperation = "source-over"; lx.globalAlpha = 1; lx.fillStyle = "#fff"; lx.fillRect(0, 0, W, H);
+  if (mix < 0.999) { lx.globalAlpha = 1 - mix; lx.drawImage(o.lastra, 0, 0); lx.globalAlpha = 1; }
+  if (mix > 0.001 && o.analisi && vivo) {
+    const D = Math.round(Math.max(0.5, p.r * 2.7) * W);
+    if (segno.width !== D) { segno.width = segno.height = D; }
+    Caleido.setFeatures(o.analisi);
+    const sc = Caleido.build(D, D, audio.currentTime, dt, parla);
+    Caleido.draw(sx, sc, 1, 1);
+    sx.globalCompositeOperation = "multiply"; sx.fillStyle = INV; sx.fillRect(0, 0, D, D); sx.globalCompositeOperation = "source-over";
+    lx.globalAlpha = mix; lx.globalCompositeOperation = "difference";
+    lx.drawImage(segno, p.cx * W - D / 2, p.cy * H - D / 2);
+    lx.globalCompositeOperation = "source-over"; lx.globalAlpha = 1;
+  }
+  tx.globalCompositeOperation = "multiply"; tx.drawImage(strato, 0, 0); tx.globalCompositeOperation = "source-over";
+  if (o.titolo) titolo(o, s, vivo ? mix : 0);
+  if (vivo && o.analisi) $("barra").firstElementChild.style.width = (100 * audio.currentTime / (audio.duration || o.analisi.dur)) + "%";
+}
+
+// ---------------------------------------------------------------- il titolo segue la voce
+// a riposo e' come stampato; mentre la voce parla le righe ondeggiano con il volume e il bianco si scalda verso l'arancione
+const tt = document.createElement("canvas"); const ttx = tt.getContext("2d");
+function titolo(o, s, quanto) {
+  const { W, H, tx } = o, st = Caleido.state();
+  if (quanto < 0.01) { tx.drawImage(o.titolo, 0, 0, W, H); return; }
+  if (tt.width !== W || tt.height !== H) { tt.width = W; tt.height = H; }
+  ttx.globalCompositeOperation = "source-over"; ttx.clearRect(0, 0, W, H);
+  const amp = W * 0.018 * quanto * Math.min(1, st.env * 1.3), fase = s * 3.2 + st.phase * 2, strisce = 5;
+  const sx0 = o.titolo.width / W, sy0 = o.titolo.height / H;
+  for (let y = 0; y < H; y += strisce) {
+    const dx = Math.sin(y * 0.035 + fase) * amp + Math.sin(y * 0.11 - fase * 1.7) * amp * 0.35;
+    ttx.drawImage(o.titolo, 0, y * sy0, o.titolo.width, strisce * sy0, dx, y, W, strisce);
+  }
+  ttx.globalCompositeOperation = "source-atop"; ttx.globalAlpha = 0.85 * quanto * Math.min(1, st.inten * 1.2);
+  ttx.fillStyle = "rgb(255,54,10)"; ttx.fillRect(0, 0, W, H); ttx.globalAlpha = 1;
+  tx.drawImage(tt, 0, 0);
+}
+
+// ---------------------------------------------------------------- suona un poster
+async function suona(o) {
+  if (attivo !== o) {
+    attivo = o; mix = 0; Caleido.reset();
+    $("titolo").textContent = o.p.titolo;
+    $("voce").textContent = o.p.voce ? "Testo di Ireneo · voce di " + o.p.voce : "Accompagnamento musicale";
+    $("cartellino").style.display = "block"; $("barra").style.display = "block"; $("barra").firstElementChild.style.width = "0";
+    audio.src = `assets/voci/${o.p.id}.mp3`;
+  }
+  $("carico").style.display = o.analisi ? "none" : "flex";
+  await o.pronto; await analizza(o);
+  $("carico").style.display = "none";
+  if (attivo !== o) return;
+  if (audio.ended) audio.currentTime = 0;
+  audio.play().then(() => $("tocca").classList.add("nascosto")).catch(() => $("tocca").classList.remove("nascosto"));
+}
+$("tocca").addEventListener("click", e => { e.stopPropagation(); audio.play().then(() => $("tocca").classList.add("nascosto")).catch(() => {}); });
+document.addEventListener("pointerdown", () => { if (attivo && audio.paused && !$("tocca").classList.contains("nascosto")) audio.play().then(() => $("tocca").classList.add("nascosto")).catch(() => {}); });
+
+// ---------------------------------------------------------------- realta' aumentata
+async function avviaAR() {
+  const mind = new MindARThree({ container: $("ar"), imageTargetSrc: "targets.mind", maxTrack: 1,
+    uiLoading: "no", uiScanning: "no", uiError: "no", filterMinCF: 0.0001, filterBeta: 0.001 });
+  const { renderer, scene, camera } = mind;
+  const visibili = new Set();
+  POSTER.forEach((p, i) => {
+    const ancora = mind.addAnchor(i);
+    ancora.onTargetFound = () => {
+      const o = poster(i);
+      if (!o.texture) {
+        o.texture = new THREE.CanvasTexture(o.tela); o.texture.colorSpace = THREE.SRGBColorSpace;
+        ancora.group.add(new THREE.Mesh(new THREE.PlaneGeometry(1, p.aspetto), new THREE.MeshBasicMaterial({ map: o.texture, toneMapped: false })));
+      }
+      visibili.add(o); $("guida").classList.add("nascosto"); suona(o);
+    };
+    ancora.onTargetLost = () => {
+      const o = poster(i); visibili.delete(o);
+      if (attivo === o) { audio.pause(); $("tocca").classList.add("nascosto"); }
+      if (!visibili.size) { $("guida").classList.remove("nascosto"); $("cartellino").style.display = "none"; }
+    };
+  });
+  await mind.start();
+  renderer.setAnimationLoop(now => {
+    for (const o of visibili) { disegna(o, now, o === attivo); if (o.texture) o.texture.needsUpdate = true; }
+    renderer.render(scene, camera);
+  });
+}
+
+// ---------------------------------------------------------------- senza poster (piano B)
+let ciclo = null;
+function apriSolo(i) {
+  const o = poster(i);
+  $("elenco").classList.add("nascosto"); $("solo").innerHTML = ""; $("solo").appendChild(o.tela);
+  $("solo").style.display = "flex"; $("chiudi").style.display = "block";
+  audio.currentTime = 0; suona(o);
+  o.tela.onclick = () => audio.paused ? audio.play() : audio.pause();
+  cancelAnimationFrame(ciclo);
+  const loop = now => { disegna(o, now, true); ciclo = requestAnimationFrame(loop); }; ciclo = requestAnimationFrame(loop);
+}
+$("chiudi").addEventListener("click", () => {
+  audio.pause(); cancelAnimationFrame(ciclo); attivo = null;
+  $("solo").style.display = "none"; $("chiudi").style.display = "none"; $("cartellino").style.display = "none"; $("barra").style.display = "none";
+  $("elenco").classList.remove("nascosto");
+});
+POSTER.forEach((p, i) => {
+  const li = document.createElement("li"), b = document.createElement("button");
+  b.innerHTML = `<small>${p.id}</small><span></span>`; b.lastChild.textContent = p.titolo;
+  b.addEventListener("click", () => apriSolo(i)); li.appendChild(b); $("lista").appendChild(li);
+});
+
+function errore(msg) { $("errore").textContent = msg; $("errore").classList.remove("nascosto"); }
+const sblocca = () => audio.play().then(() => audio.pause()).catch(() => {});
+
+$("avvia").addEventListener("click", async () => {
+  $("avvia").disabled = true; $("avvia").textContent = "Avvio della fotocamera…";
+  audio.src = "assets/voci/P01.mp3"; sblocca();
+  try {
+    await avviaAR();
+    $("inizio").classList.add("nascosto"); $("guida").classList.remove("nascosto");
+  } catch (e) {
+    console.error(e);
+    $("avvia").disabled = false; $("avvia").textContent = "Apri la fotocamera";
+    errore("La fotocamera non si è aperta. Controlla di aver dato il permesso al browser, oppure ascolta senza poster.");
+  }
+});
+(async () => {
+  try { await avviaAR(); }
+  catch (e) {
+    console.error(e);
+    $("guida").classList.add("nascosto"); $("inizio").classList.remove("nascosto");
+    errore("La fotocamera non si è aperta. Tocca il pulsante per riprovare, oppure ascolta senza poster.");
+  }
+})();
+$("senza").addEventListener("click", () => {
+  audio.src = "assets/voci/P01.mp3"; sblocca();
+  $("inizio").classList.add("nascosto"); $("elenco").classList.remove("nascosto");
+});
+audio.addEventListener("ended", () => { $("barra").firstElementChild.style.width = "100%"; });
+window.__TEST__ = { audio, poster, get attivo() { return attivo; } };
+</script>
+</body>
+</html>
