@@ -232,7 +232,7 @@ async function avviaAR() {
   const mind = new MindARThree({ container: $("ar"), imageTargetSrc: "targets.mind", maxTrack: 1,
     uiLoading: "no", uiScanning: "no", uiError: "no", filterMinCF: 0.0001, filterBeta: 0.001 });
   const { renderer, scene, camera } = mind;
-  const visibili = new Set();
+  const visibili = new Set(); let COP_vivo = () => false;
   POSTER.forEach((p, i) => {
     const ancora = mind.addAnchor(i);
     ancora.onTargetFound = () => {
@@ -246,11 +246,36 @@ async function avviaAR() {
     ancora.onTargetLost = () => {
       const o = poster(i); visibili.delete(o);
       if (attivo === o) { audio.pause(); $("tocca").classList.add("nascosto"); }
-      if (!visibili.size) { $("guida").classList.remove("nascosto"); $("cartellino").style.display = "none"; }
+      if (!visibili.size && !COP_vivo()) { $("guida").classList.remove("nascosto"); $("cartellino").style.display = "none"; }
     };
   });
+  // copertina della tesi: scorrono le immagini di Ireneo e di Stefano
+  const COP = { n: 42, img: [], tela: document.createElement("canvas"), vivo: false, t0: 0, tex: null };
+  COP.tela.width = 760; COP.tela.height = 1000;
+  const copCarica = () => { if (COP.img.length) return; for (let k = 1; k <= COP.n; k++) { const im = new Image(); im.src = "assets/copertina/" + String(k).padStart(2, "0") + ".jpg"; COP.img.push(im); } };
+  const copDisegna = now => {
+    const x = COP.tela.getContext("2d"), dur = 700, fade = 160, t = now - COP.t0;
+    const i = Math.floor(t / dur) % COP.n, f = Math.min(1, (t % dur) / fade);
+    const prev = COP.img[(i + COP.n - 1) % COP.n], cur = COP.img[i];
+    x.fillStyle = "#231f20"; x.fillRect(0, 0, 760, 1000);
+    if (prev && prev.complete && prev.naturalWidth) { x.globalAlpha = 1; x.drawImage(prev, 0, 0, 760, 1000); }
+    if (cur && cur.complete && cur.naturalWidth) { x.globalAlpha = f; x.drawImage(cur, 0, 0, 760, 1000); }
+    x.globalAlpha = 1;
+  };
+  const copAncora = mind.addAnchor(POSTER.length);
+  copAncora.onTargetFound = () => {
+    copCarica();
+    if (!COP.tex) {
+      COP.tex = new THREE.CanvasTexture(COP.tela); COP.tex.colorSpace = THREE.SRGBColorSpace;
+      copAncora.group.add(new THREE.Mesh(new THREE.PlaneGeometry(1, 250 / 190), new THREE.MeshBasicMaterial({ map: COP.tex, toneMapped: false })));
+    }
+    COP.vivo = true; COP.t0 = performance.now(); $("guida").classList.add("nascosto");
+  };
+  copAncora.onTargetLost = () => { COP.vivo = false; if (!visibili.size) { $("guida").classList.remove("nascosto"); $("cartellino").style.display = "none"; } };
+  COP_vivo = () => COP.vivo;
   await mind.start();
   renderer.setAnimationLoop(now => {
+    if (COP.vivo) { copDisegna(performance.now()); COP.tex.needsUpdate = true; }
     for (const o of visibili) { disegna(o, now, o === attivo); if (o.texture) o.texture.needsUpdate = true; }
     renderer.render(scene, camera);
   });
